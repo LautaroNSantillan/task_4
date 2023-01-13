@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AEvents | Past Events</title>
+    <link rel="shortcut icon" href="./assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="./assets/styles/style.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg  nav-pink">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#"><img class="aa-logo" src="./assets/images/logo_amazing_events.png"
+                        alt="AMAZING EVENTS"></a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link " aria-current="page" href="./index.html">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./upcoming_events.html">Upcoming Events</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./past_events.html">Past Events</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./contact.html">Contact</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="./stats.html">Stats</a>
+                        </li>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <div class="page-title">
+            <h1 class="page-h1">
+                HOME
+            </h1>
+        </div>
+        <div id="vueApp" class="d-flex flex-column">
+            <div id="loader"></div>
+            
+            <div class="check-search" >
+                <div class="form-check d-flex form-switch" v-for="category of categories">   
+                    <label class="form-check-label">{{category}}
+                    <input  v-model="checked"  @change="crossFilter" class="form-check-input" type="checkbox" :value="category">
+                    </label>
+                </div>
+            </div>
+            <div class="check-search" >
+                <form class="d-flex search-form" role="search">
+                    <input  v-model="textInput"  @keyup="crossFilter" class="form-control me-2" id="search-bar" type="search" placeholder="Search"
+                        aria-label="Search">
+                </form>
+            </div>
+
+            <section class="cardsSection">
+                <div class="row" id="aevents">
+                    <div class="col-12 col-md-6 col-xl-4 " v-for="event of eventsUsed">
+                        <div   class="card w-100 cardsTopBot" >
+                            <img v-bind:src=" event.image " class="img-card" :alt="event.category">
+                            <div class="card-body" >
+                            <h4 class="card-title">{{event.name}}</h4>
+                            <p class="card-text">{{event.description}}</p>
+                                    <div class="price-btn">
+                                        <p> Price: ${{event.price}}</p>
+                                          <a href="./details.html?id={{event._id}} " class="btn btn-primary">Details</a>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>        
+                </div>
+            </section>
+        </div>
+    </main>
+
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN"
+        crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script src="./assets/js/main.js"></script>
+</body>
+
+</html>
