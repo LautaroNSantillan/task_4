@@ -2,186 +2,59 @@ const { createApp } = Vue
 createApp({
     data() {
         return {
-            data: [],
-            everyEvent: [],
-            pastEvents: [],
-            upcomingEvents: [],
-            eventsUsed: [],
-            maxAttEvent: {},
-            pastEventsRows:{},
-            upcomingEventsRows:{},
+            eventos: [] ,
+            eventosCalculados: {} ,
+            eventosPasados: [] ,
+            eventosPorVenir: [] ,
+            imprimirEventosPasados: [] ,
+            imprimirEventosPorVenir: [] ,
         }
     },
-    created() {
-
-    },
-    mounted() {
-        this.loadContent()
-
-    },
-    methods: {
-
-        getDataFromAPI: async function () {
-            const response = await fetch('https://mindhub-xj03.onrender.com/api/amazing')
-            const dataAE = await response.json()
-            this.data = dataAE
-            this.everyEvent = [...this.data.events]
-            this.categories = Array.from(new Set(this.everyEvent.map(e => e.category)))
-        },
-
-        loadContent: async function () {
-            await this.getDataFromAPI()
-             this.filterEventsByDate(this.data)
-            this.highestAttendance()
-            this.pastEventsRows = this.createRowStats2(this.pastEvents)
-
-            console.log(this.createRowStats2(this.pastEvents))
-            
-            //console.log(this.revAndAttPast())
-           // console.log(this.revAndAttUpcoming())
-        },
-
-        filterEventsByDate(arr) {
-            for (let event of arr.events) {
-                if (event.date <= arr.currentDate) {
-                    this.pastEvents.push(event)
-                } else {
-                    this.upcomingEvents.push(event)
-                }
+    created(){
+        fetch("https://mindhub-xj03.onrender.com/api/amazing")
+        .then(res=>res.json())
+        .then(datos=>{
+            this.eventos=[...datos.events];
+            for (let evento of this.eventos) {
+                evento.aux= 1;
+                evento.porcentaje = Math.round(Number( evento[evento.date < datos.currentDate ? 'assistance':'estimate'] / (evento.capacity / 100)));
+                evento.ganancias = Number(evento.price * evento[evento.date < datos.currentDate ? 'assistance':'estimate']);
             }
+            this.eventosPasados=this.eventos.filter(evento=>evento.date<datos.currentDate).sort();//filtrar pasadas
+            this.eventosPorVenir=this.eventos.filter(evento=>evento.date>datos.currentDate).sort();//filtrar futuras
+            this.filtrarPrimeraLinea();
+            this.imprimirEventosPasados=this.reducirEventos(this.eventosPasados);
+            this.imprimirEventosPorVenir=this.reducirEventos(this.eventosPorVenir);
+        })
+        .catch((err)=>console.log(err));
+    },
+    methods:{
+            reducirEventos:function(eventosParaReducir){
+                            let reducidas={};
+                            for(let evento of eventosParaReducir) {
+                                if (!Object.hasOwn(reducidas,evento.category))
+                                {
+                                reducidas[evento.category]={...evento};}
+                                else
+                                {
+                                reducidas[evento.category].porcentaje+=evento.porcentaje;
+                                reducidas[evento.category].ganancias+=evento.ganancias;
+                                reducidas[evento.category].aux++;
+                                }
+                            };
+                            reducidas=Object.values(reducidas);
+                            reducidas.forEach(evento=>{
+                                evento.porcentaje/=evento.aux;
+                            })
+                            return reducidas;
+                        },
+            filtrarPrimeraLinea:function(){
+                this.eventos.sort((mayor,menor)=>mayor.porcentaje-menor.porcentaje);
+                this.eventosPasados.sort((mayor,menor)=>mayor.porcentaje-menor.porcentaje);
+                this.eventosCalculados.mayorPorcentaje=`${this.eventosPasados[this.eventosPasados.length-1].name} : ${this.eventosPasados[this.eventosPasados.length-1].porcentaje} %`;
+                this.eventosCalculados.menorPorcentaje=`${this.eventosPasados[0].name} : ${this.eventosPasados[0].porcentaje} %`;
+                this.eventosCalculados.mayorCapacidad=`${this.eventos.sort((menor,mayor)=>mayor.capacity-menor.capacity)[0].name} : ${this.eventos.sort((menor,mayor)=>mayor.capacity-menor.capacity)[0].capacity} people`;
+            },
         },
-
-        assistanceOrEstimate(e) {
-            let show = e.assistance ? `Assistance: ${e.assistance}` : `Estimate: ${e.estimate}`
-            return show
-        },
-
-        highestAttendance() {
-            const pastEventArr = this.pastEvents.map(({ name, capacity, assistance }) => ({ name, capacity, assistance }))
-            pastEventArr.forEach((e) => {
-                e.attendance = e.assistance * 100 / e.capacity
-            })
-            const eventAttendance = pastEventArr.map(e => e.attendance)
-            const maxAttendance = Math.max(...eventAttendance)
-            const objMaxAtt = pastEventArr.find(e => e.attendance === maxAttendance)
-            this.maxAttEvent = objMaxAtt
-            return this.maxAttEvent.name + "" + " Attendance: " + Math.round(this.maxAttEvent.attendance) + "%"
-        },
-        lowestAttendance() {
-            const pastEventArr = this.pastEvents.map(({ name, capacity, assistance }) => ({ name, capacity, assistance }))
-            pastEventArr.forEach((e) => {
-                e.attendance = e.assistance * 100 / e.capacity
-            })
-            const eventAttendance = pastEventArr.map(e => e.attendance)
-            const minAttendance = Math.min(...eventAttendance)
-            const objMinAtt = pastEventArr.find(e => e.attendance === minAttendance)
-            return objMinAtt.name + "" + " Attendance: " + Math.round(objMinAtt.attendance) + "%"
-        },
-
-        largestCap() {
-            const eventArr = this.data.events.map(({ name, capacity }) => ({ name, capacity }))
-            const eventCapacity = eventArr.map(e => e.capacity)
-            const maxCapacity = Math.max(...eventCapacity)
-            const objMaxCap = eventArr.find(e => e.capacity === maxCapacity)
-            return objMaxCap.name + " " + "Capacity: " + objMaxCap.capacity
-        },
-
-
-        createRowStats2(eventArr) {
-            let usedArr = [];
-            if (eventArr[0].estimate) {
-                usedArr = eventArr.map(({ name, capacity, estimate, price, category }) => ({ name, capacity, estimate, price, category }))
-                usedArr.forEach((e) => {
-                    e.revenue = e.price * e.estimate;
-                    e.attendance = e.estimate * 100 / e.capacity;
-                    return usedArr
-                })
-            } else {
-                usedArr = eventArr.map(({ name, capacity, assistance, price, category }) => ({ name, capacity, assistance, price, category }))
-                usedArr.forEach((e) => {
-                    e.revenue = e.price * e.assistance;
-                    e.attendance = e.assistance * 100 / e.capacity;
-                    return usedArr
-                })
-            }
     
-            const objFromArr = usedArr.reduce((acc, cv) => {
-                let category = cv.category
-                if (acc[category] == null) {
-                    acc[category] = []
-                    acc[category].push(cv)
-                    acc[category].counter = 1
-                }
-                else if (cv.category === acc[category][0].category) {
-                    acc[category][0].attendance += cv.attendance
-                    acc[category][0].revenue += cv.revenue
-                    acc[category].counter += 1
-                }
-                return acc
-            }, [])
-
-            const singleArr = objFromArr.reduce((acc,cv)=>{
-                acc=[]
-                acc.push(cv)
-            },[])
-            return singleArr
-           
-            
-            }
-            
-        },
-
-
-
-
-
-
-
-
-
-
-
-
-        /*   revAndAttPast(){
-              let nArr=[]
-            let nnArr=[]
-            nArr= this.pastEvents.forEach((e) => {
-                    e.revenue = e.price * e.estimate;
-                    e.attendance = e.estimate * 100 / e.capacity;
-                 nnArr = nArr.map(({ name, capacity, estimate, price, category }) => ({ name, capacity, estimate, price, category }))
-                    
-                    return nArr
-                })
-            }, 
-
-            revAndAttUpcoming (){
-                let xArr=[]
-               let xxArr=[]
-                 xArr= this.pastEvents.forEach((e) => {
-                     e.revenue = e.price * e.assistance;
-                    e.attendance = e.assistance * 100 / e.capacity;
-                     xxArr = xArr.map(({ name, capacity, assistance, price, category }) => ({ name, capacity, assistance, price, category })) 
-                   
-                    return xArr
-                })
-            },  
-        
-
-         objFromArr (arr) {arr.reduce((acc, cv) => {
-            let category = cv.category
-            if (acc[category] == null) {
-                acc[category] = []
-                acc[category].push(cv)
-                acc[category].counter = 1
-            }
-            else if (cv.category === acc[category][0].category) {
-                acc[category][0].attendance += cv.attendance
-                acc[category][0].revenue += cv.revenue
-                acc[category].counter += 1
-            }
-            return acc
-        }, {}) },
-
-    },*/
-
 }).mount('#vueApp')
