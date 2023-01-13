@@ -69,10 +69,10 @@
                         Events with larger capacity
                     </th>
                 </tr>
-                <tr v-if="eventosCalculados.length!==0" class="table-active color_td"></tr>>
-                <td>{{eventosCalculados.mayorPorcentaje}}</td>
-                <td>{{eventosCalculados.menorPorcentaje}}</td>
-                <td>{{eventosCalculados.mayorCapacidad}}</td>
+                <tr v-if="calculatedEvents.length!==0" class="table-active color_td"></tr>>
+                <td>{{calculatedEvents.maxAttendance}}</td>
+                <td>{{calculatedEvents.minAttendance}}</td>
+                <td>{{calculatedEvents.maxCapacity}}</td>
             </table>
             <table id="eStats2">
                 <tr>
@@ -85,10 +85,10 @@
                         Percentage of attendance
                     </th>
                 </tr>
-                <tr v-if="imprimirEventosPorVenir" v-for="eventoPorVenir of imprimirEventosPorVenir" class="table-active color_td">
-                    <td>{{eventoPorVenir.category}}</td>
-                    <td>$ {{eventoPorVenir.ganancias}}</td>
-                    <td>{{eventoPorVenir.porcentaje}} %</td>
+                <tr v-if="printUpcomingEvents" v-for="upcomingEvent of printUpcomingEvents" class="table-active color_td">
+                    <td>{{upcomingEvent.category}}</td>
+                    <td>$ {{upcomingEvent.revenue}}</td>
+                    <td>{{upcomingEvent.attendance}} %</td>
                     </tr>
             </table>
             <table id="eStats3">
@@ -100,10 +100,10 @@
                     <th>Revenues</th>
                     <th>Percentage of attendance</th>
                 </tr>
-                <tr v-if="imprimirEventosPasados" v-for="eventoPasado of imprimirEventosPasados" class="table-active color_td">
-                    <td>{{eventoPasado.category}}</td>
-                    <td>$ {{eventoPasado.ganancias}}</td>
-                    <td>{{eventoPasado.porcentaje}} %</td>
+                <tr v-if="printPastEvents" v-for="pastEvent of printPastEvents" class="table-active color_td">
+                    <td>{{pastEvent.category}}</td>
+                    <td>$ {{pastEvent.revenue}}</td>
+                    <td>{{pastEvent.attendance}} %</td>
                     </tr>
             </table>
         </div>

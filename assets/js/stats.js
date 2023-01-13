@@ -2,59 +2,58 @@ const { createApp } = Vue
 createApp({
     data() {
         return {
-            eventos: [] ,
-            eventosCalculados: {} ,
-            eventosPasados: [] ,
-            eventosPorVenir: [] ,
-            imprimirEventosPasados: [] ,
-            imprimirEventosPorVenir: [] ,
+            events: [],
+            calculatedEvents: {},
+            pastEvents: [],
+            upcomingEvents: [],
+            printPastEvents: [],
+            printUpcomingEvents: [],
         }
     },
-    created(){
+    created() {
         fetch("https://mindhub-xj03.onrender.com/api/amazing")
-        .then(res=>res.json())
-        .then(datos=>{
-            this.eventos=[...datos.events];
-            for (let evento of this.eventos) {
-                evento.aux= 1;
-                evento.porcentaje = Math.round(Number( evento[evento.date < datos.currentDate ? 'assistance':'estimate'] / (evento.capacity / 100)));
-                evento.ganancias = Number(evento.price * evento[evento.date < datos.currentDate ? 'assistance':'estimate']);
-            }
-            this.eventosPasados=this.eventos.filter(evento=>evento.date<datos.currentDate).sort();//filtrar pasadas
-            this.eventosPorVenir=this.eventos.filter(evento=>evento.date>datos.currentDate).sort();//filtrar futuras
-            this.filtrarPrimeraLinea();
-            this.imprimirEventosPasados=this.reducirEventos(this.eventosPasados);
-            this.imprimirEventosPorVenir=this.reducirEventos(this.eventosPorVenir);
-        })
-        .catch((err)=>console.log(err));
+            .then(res => res.json())
+            .then(data => {
+                this.events = [...data.events];
+                for (let event of this.events) {
+                    event.aux = 1;
+                    event.attendance = Math.round(Number(event[event.date < data.currentDate ? 'assistance' : 'estimate'] / (event.capacity / 100)));
+                    event.revenue = Number(event.price * event[event.date < data.currentDate ? 'assistance' : 'estimate']);
+                }
+                this.pastEvents = this.events.filter(event => event.date < data.currentDate).sort();//filtrar pasadas
+                this.upcomingEvents = this.events.filter(event => event.date > data.currentDate).sort();//filtrar futuras
+                this.firstStats();
+                this.printPastEvents = this.reduceEvents(this.pastEvents);
+                this.printUpcomingEvents = this.reduceEvents(this.upcomingEvents);
+            })
+            .catch((err) => console.log(err));
     },
-    methods:{
-            reducirEventos:function(eventosParaReducir){
-                            let reducidas={};
-                            for(let evento of eventosParaReducir) {
-                                if (!Object.hasOwn(reducidas,evento.category))
-                                {
-                                reducidas[evento.category]={...evento};}
-                                else
-                                {
-                                reducidas[evento.category].porcentaje+=evento.porcentaje;
-                                reducidas[evento.category].ganancias+=evento.ganancias;
-                                reducidas[evento.category].aux++;
-                                }
-                            };
-                            reducidas=Object.values(reducidas);
-                            reducidas.forEach(evento=>{
-                                evento.porcentaje/=evento.aux;
-                            })
-                            return reducidas;
-                        },
-            filtrarPrimeraLinea:function(){
-                this.eventos.sort((mayor,menor)=>mayor.porcentaje-menor.porcentaje);
-                this.eventosPasados.sort((mayor,menor)=>mayor.porcentaje-menor.porcentaje);
-                this.eventosCalculados.mayorPorcentaje=`${this.eventosPasados[this.eventosPasados.length-1].name} : ${this.eventosPasados[this.eventosPasados.length-1].porcentaje} %`;
-                this.eventosCalculados.menorPorcentaje=`${this.eventosPasados[0].name} : ${this.eventosPasados[0].porcentaje} %`;
-                this.eventosCalculados.mayorCapacidad=`${this.eventos.sort((menor,mayor)=>mayor.capacity-menor.capacity)[0].name} : ${this.eventos.sort((menor,mayor)=>mayor.capacity-menor.capacity)[0].capacity} people`;
-            },
+    methods: {
+        reduceEvents: function (arr) {
+            let reducedEvent = {};
+            for (let event of arr) {
+                if (!Object.hasOwn(reducedEvent, event.category)) {
+                    reducedEvent[event.category] = { ...event };
+                }
+                else {
+                    reducedEvent[event.category].attendance += event.attendance;
+                    reducedEvent[event.category].revenue += event.revenue;
+                    reducedEvent[event.category].aux++;
+                }
+            };
+            reducedEvent = Object.values(reducedEvent);
+            reducedEvent.forEach(event => {
+                event.attendance /= event.aux;
+            })
+            return reducedEvent;
         },
-    
+        firstStats: function () {
+            this.events.sort((max, min) => max.attendance - min.attendance);
+            this.pastEvents.sort((max, min) => max.attendance - min.attendance);
+            this.calculatedEvents.maxAttendance = `${this.pastEvents[this.pastEvents.length - 1].name} : ${this.pastEvents[this.pastEvents.length - 1].attendance} %`;
+            this.calculatedEvents.minAttendance = `${this.pastEvents[0].name} : ${this.pastEvents[0].attendance} %`;
+            this.calculatedEvents.maxCapacity = `${this.events.sort((min, max) => max.capacity - min.capacity)[0].name} : ${this.events.sort((min, max) => max.capacity - min.capacity)[0].capacity} people`;
+        },
+    },
+
 }).mount('#vueApp')
